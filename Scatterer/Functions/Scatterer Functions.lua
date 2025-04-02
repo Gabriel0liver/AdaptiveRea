@@ -107,14 +107,30 @@ function PlayShuffleNote(group)
     end
 end
 
-function AddTracksToSampler()
+function AddTracksToSampler(proj)
     local initial_note = 0
+    if proj.sampler_track == nil or not reaper.ValidatePtr(proj.sampler_track, "MediaTrack*") then
+        local idx = reaper.CountTracks(0)
+        reaper.InsertTrackAtIndex(idx, true)
+        proj.sampler_track = reaper.GetTrack(0, idx)
+        reaper.GetSetMediaTrackInfo_String(proj.sampler_track, "P_NAME", "Sampler Track", true)
+        reaper.SetMediaTrackInfo_Value(proj.sampler_track, "I_FOLDERDEPTH", 1) -- Set as a folder track
+        reaper.SetMediaTrackInfo_Value(proj.sampler_track, "I_FOLDERCOMPACT", 2) -- Set as a folder track
+
+        local subtrack_idx = reaper.GetMediaTrackInfo_Value(proj.sampler_track, "IP_TRACKNUMBER")
+        reaper.InsertTrackAtIndex(subtrack_idx, true)
+        local subtrack = reaper.GetTrack(0, subtrack_idx)
+        reaper.SetMediaTrackInfo_Value(subtrack, "I_FOLDERDEPTH", 0) -- Set as a child track
+    end
     for i = 1, reaper.CountSelectedMediaItems(-1) do
         local item = reaper.GetSelectedMediaItem(-1, i-1)
         local tk = reaper.GetActiveTake(item)
         local src = reaper.GetMediaItemTake_Source(tk)
         local parent_src = reaper.GetMediaSourceParent(src)
-        print(reaper.GetMediaSourceFileName(src))
+
+        print(reaper.ValidatePtr(proj.sampler_track, "MediaTrack*" ))
+
+        
     end
 end
 

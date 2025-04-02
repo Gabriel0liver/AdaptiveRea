@@ -9,8 +9,6 @@ function main_loop()
     end
 
     CheckProjects()
-    --AlternateLoop() 
-
 
     ------------ Window management area
     --- Flags

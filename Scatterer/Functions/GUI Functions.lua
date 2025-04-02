@@ -65,7 +65,8 @@ function GroupTab(group)
     is_save, group.parameter_value = reaper.ImGui_SliderDouble(ctx, "Parameter value", group.parameter_value, 0, 1)
 
     reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_IndentSpacing(), 0)
-    local open = reaper.ImGui_TreeNode(ctx, "Spawn Rate")
+    reaper.ImGui_Text(ctx, "Spawn Rate:  " .. math.floor(group.spawnrate) .. "%")
+    local open = reaper.ImGui_TreeNode(ctx, "Spawn Rate Curve")
     if open then
         local curve_editor_height = 75
         local change = ce_draw(ctx, group.curve, 'target', -FLTMIN, curve_editor_height, {group.parameter_value})
@@ -112,7 +113,7 @@ function GroupTab(group)
     end
 
     if reaper.ImGui_Button(ctx, "Add Tracks To Sampler", -FLTMIN) then
-        AddTracksToSampler()
+        AddTracksToSampler(ProjConfigs[FocusedProj])
     end
     
     -- Each note
