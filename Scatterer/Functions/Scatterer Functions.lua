@@ -107,6 +107,17 @@ function PlayShuffleNote(group)
     end
 end
 
+function AddTracksToSampler()
+    local initial_note = 0
+    for i = 1, reaper.CountSelectedMediaItems(-1) do
+        local item = reaper.GetSelectedMediaItem(-1, i-1)
+        local tk = reaper.GetActiveTake(item)
+        local src = reaper.GetMediaItemTake_Source(tk)
+        local parent_src = reaper.GetMediaSourceParent(src)
+        print(reaper.GetMediaSourceFileName(src))
+    end
+end
+
 -------------------
 -- Group Operations
 -------------------
@@ -192,6 +203,7 @@ function CreateProjectConfigTable(project)
         oldtime = reaper.time_precise(),
         oldisplay = is_play,
         is_loopchanged = false, -- If true then the script alternated the items in this loop
+        sampler_track = nil,
     }   
     return t
 end

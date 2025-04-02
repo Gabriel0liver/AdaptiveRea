@@ -110,6 +110,10 @@ function GroupTab(group)
     if reaper.ImGui_Button(ctx, "Select Notes", -FLTMIN) then
         reaper.ImGui_OpenPopup(ctx, 'SelectNotes')
     end
+
+    if reaper.ImGui_Button(ctx, "Add Tracks To Sampler", -FLTMIN) then
+        AddTracksToSampler()
+    end
     
     -- Each note
     local avail_x, avail_y = reaper.ImGui_GetContentRegionAvail(ctx)
