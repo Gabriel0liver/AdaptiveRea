@@ -64,7 +64,23 @@ function GroupTab(group)
 
     is_save, group.parameter_value = reaper.ImGui_SliderDouble(ctx, "Parameter value", group.parameter_value, 0, 1)
 
-    is_save, group.spawnrate = reaper.ImGui_SliderInt(ctx, "Spawn Rate", group.spawnrate, 0, 100, "%d%%")
+    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_IndentSpacing(), 0)
+    local open = reaper.ImGui_TreeNode(ctx, "Spawn Rate")
+    if open then
+        local curve_editor_height = 75
+        local change = ce_draw(ctx, group.curve, 'target', -FLTMIN, curve_editor_height, {group.parameter_value})
+        if change then -- if the curve was changed need to update the value, as it could have change (if change the Y for the current X)
+            --target.is_update_ce = true
+        end
+        is_save = is_save or change
+
+        reaper.ImGui_TreePop(ctx)
+    end
+
+    group.spawnrate = ce_evaluate_curve(group.curve,group.parameter_value)*100
+
+    reaper.ImGui_PopStyleVar(ctx)
+    --is_save, group.spawnrate = reaper.ImGui_SliderInt(ctx, "Spawn Rate", group.spawnrate, 0, 100, "%d%%")
 
     local change_min, v_min = reaper.ImGui_InputInt(ctx, 'Min Interval ms', group.min, 1, 100)
     local change_max, v_max = reaper.ImGui_InputInt(ctx, 'Max Interval ms', group.max, 1, 100)

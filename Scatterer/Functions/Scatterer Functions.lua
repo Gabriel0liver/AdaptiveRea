@@ -110,6 +110,11 @@ end
 -------------------
 -- Group Operations
 -------------------
+---
+---
+function CreatePointTable()
+    return {ce_point(0,0), ce_point(1,1)}
+end
 
 function Add_ChildTakes(take_table) -- TODO check if item from the take is already at this take_table , can only focus on one.
     for item in enumSelectedItems(FocusedProj) do
@@ -148,6 +153,7 @@ function CreateNewGroup(name)
                             all_notes = CreateNotesTable(),
                             next_time = 0,
                             mode = 0, -- 0 = Random, 1 = Shuffle
+                            curve = CreatePointTable()
                         }
     return default_table
 end
