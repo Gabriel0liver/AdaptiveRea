@@ -37,6 +37,8 @@ function main_loop()
         SHIFT = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Mod_Shift())
         ALT = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Mod_Alt()) ]]
 
+    RecieveOSC()
+
     if visible then
         MenuBar()
         local _ --  values I will throw away

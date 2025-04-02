@@ -9,11 +9,21 @@ function GuiInit(ScriptName)
     reaper.ImGui_Attach(ctx, FontTiny)
 end
 
+
 function GuiMain(proj)
     proj.scripts = {
-        {name="Layers"},
-        {name="ReaGoTo"},
-        {name="Scatterer"}
+        {
+            name="LayersV2",
+            id="_RS666e3a9f2e2172c7ac28ad55b6c35440b8f66b1e"
+        },
+        {
+            name="ReaGoTo",
+            id=""
+        },
+        {
+            name="Scatterer",
+            id="_RS23012dc77199424d07862533c36e47f224275501"
+        }
     }
     if reaper.ImGui_BeginTabBar(ctx, 'Scripts', reaper.ImGui_TabBarFlags_Reorderable() | reaper.ImGui_TabBarFlags_AutoSelectNewTabs() ) then
         local is_save
@@ -34,9 +44,16 @@ function GuiMain(proj)
     end
 end
 
+
 function ScriptTab(script)
-    if reaper.ImGui_Button(ctx, "Open " .. script.name, -FLTMIN) then --Button to open the script
-        reaper.Main_OnCommand(reaper.NamedCommandLookup("_S&M_SHOW_ACTION_LIST"), 0)
+    if reaper.ImGui_Button(ctx, "Open " .. script.name, -FLTMIN) then -- Button to open the script
+        local command = reaper.NamedCommandLookup(script.id)
+        if command then
+            reaper.Main_OnCommand(command, 0) -- Open the script
+        else
+            reaper.ShowMessageBox('Script not found. Please check the script ID.', 'Error', 0)
+        end
+    
     end
 end
 

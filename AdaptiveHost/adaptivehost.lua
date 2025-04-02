@@ -7,6 +7,18 @@
 --    + Fix atexit trying to reach project when reaper is closing
 -- @license MIT
 
+local opsys = reaper.GetOS()
+local extension 
+if opsys:match('Win') then
+  extension = 'dll'
+else -- Linux and Macos
+  extension = 'so'
+end
+
+local info = debug.getinfo(1, 'S');
+local script_path = info.source:match[[^@?(.*[\/])[^\/]-$]];
+package.cpath = package.cpath .. ";" .. script_path .. "/socket module/?."..extension  -- Add current folder/socket module for looking at .dll (need for loading basic luasocket)
+package.path = package.path .. ";" .. script_path .. "/socket module/?.lua" -- Add current folder/socket module for looking at .lua ( Only need for loading the other functions packages lua osc.lua, url.lua etc... You can change those files path and update this line)ssssssssssssssssssssssssssssssssssss
 
 
 -- get script path\
@@ -47,9 +59,18 @@ Gui_W_init = 275 -- Init
 Gui_H_init = 450 -- Init 
 FLTMIN, FLTMAX = reaper.ImGui_NumericLimits_Float() --set the padding to the right side
 
+-- Get socket and osc modules
+socket = require('socket.core')
+osc = require('osc')
+
+-- Get UDP
+udp = assert(socket.udp())
+assert(udp:setsockname("127.0.0.1",9004)) -- Set IP and PORT
+udp:settimeout(0.0001) -- Dont forget to set a low timeout! udp:receive block until have a message or timeout. values like (1) will make REAPER laggy.
+
+
 -- Start
 FirstRun = true -- prevent triggering on the first loop
 GuiInit(ScriptName)
 reaper.defer(main_loop)
 reaper.atexit(Save) -- register function to run at the end
-

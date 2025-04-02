@@ -35,6 +35,28 @@ function Scatter(proj)
     end
 end
 
+function ReadMem()
+    reaper.gmem_attach("Scatterer") -- Attach to the gmem
+    if reaper.gmem_read(0) == 1 then
+        local groups = ProjConfigs[FocusedProj].groups
+
+        
+        local length = reaper.gmem_read(2)  -- Read parameter string length
+        local str = ""
+        for i = 1, length do
+            str = str .. string.char(reaper.gmem_read(2 + i)) --Read parameter string
+        end
+
+        -- Find the parameter in the table
+        for group_idx, group in ipairs(groups) do
+            if group.name == str then
+                group.parameter_value = reaper.gmem_read(1) -- Read Parameter value
+            end
+        end
+        reaper.gmem_write(0, 0) -- Reset the memory
+    end
+end
+
 function PlayRandomNote(group)
 
     --[[
@@ -117,6 +139,7 @@ end
 
 function CreateNewGroup(name)
     local default_table = {name = name,
+                            parameter_value = 0,
                             spawnrate = 0,
                             min = 0,
                             max = 100,

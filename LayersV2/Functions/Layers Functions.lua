@@ -266,3 +266,25 @@ function AtExit()
     end
     Save() --Remember, when atexit function is triggered reaper already closed the projects. So this wont save in the extstates, the script saves as user change things!
 end
+
+function ReadMem()
+    reaper.gmem_attach("LayersV2") -- Attach to the gmem
+    if reaper.gmem_read(0) == 1 then
+        local parameters = ProjConfigs[FocusedProj].parameters
+
+        
+        local length = reaper.gmem_read(2)  -- Read parameter string length
+        local str = ""
+        for i = 1, length do
+            str = str .. string.char(reaper.gmem_read(2 + i)) --Read parameter string
+        end
+
+        -- Find the parameter in the table
+        for parameter_idx, parameter in ipairs(parameters) do
+            if parameter.name == str then
+                parameter.value = reaper.gmem_read(1) -- Read Parameter value
+            end
+        end
+        reaper.gmem_write(0, 0) -- Reset the memory
+    end
+end

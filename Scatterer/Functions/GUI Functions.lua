@@ -62,6 +62,8 @@ end
 function GroupTab(group)
     local is_save -- if something changed than save
 
+    is_save, group.parameter_value = reaper.ImGui_SliderDouble(ctx, "Parameter value", group.parameter_value, 0, 1)
+
     is_save, group.spawnrate = reaper.ImGui_SliderInt(ctx, "Spawn Rate", group.spawnrate, 0, 100, "%d%%")
 
     local change_min, v_min = reaper.ImGui_InputInt(ctx, 'Min Interval ms', group.min, 1, 100)

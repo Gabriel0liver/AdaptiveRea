@@ -12,7 +12,7 @@ function main_loop()
     ----------- Checks / Get Input / Update with Inputs 
     CurrentTime = reaper.time_precise()
     CheckProjects()
-    RecieveOSC()
+    ReadMem()
     MIDIInput = GetMIDIInput() -- Global variable with the MIDI from current loop
     UpdateParameterValuesInput()
 
@@ -176,25 +176,6 @@ function UpdateParameterValuesInput()
             if midi_val then
                 -- Optionally put the value at the midi curve to tilt the MIDI Input value.
                 parameter.value = midi_val/127
-            end
-        end
-    end
-end
-
-function RecieveOSC()
-    local parameters = ProjConfigs[FocusedProj].parameters
-
-    local t = osc.Receive(udp)
-    for k, v in ipairs(t) do
-        if v.address == 'play' then
-            reaper.Main_OnCommand(40044, 0) -- Play
-        elseif v.address == 'stop' then
-            reaper.Main_OnCommand(1016, 0) -- Stop
-        elseif v.address == 'param' then -- Set a parameter
-            for parameter_idx, parameter in ipairs(parameters) do
-                if parameter.name == v.values[1] then
-                    parameter.value = v.values[2]
-                end
             end
         end
     end
