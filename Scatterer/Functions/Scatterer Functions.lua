@@ -109,27 +109,41 @@ end
 
 function AddTracksToSampler(proj)
     local initial_note = 0
-    if proj.sampler_track == nil or not reaper.ValidatePtr(proj.sampler_track, "MediaTrack*") then
-        local idx = reaper.CountTracks(0)
-        reaper.InsertTrackAtIndex(idx, true)
-        proj.sampler_track = reaper.GetTrack(0, idx)
-        reaper.GetSetMediaTrackInfo_String(proj.sampler_track, "P_NAME", "Sampler Track", true)
-        reaper.SetMediaTrackInfo_Value(proj.sampler_track, "I_FOLDERDEPTH", 1) -- Set as a folder track
-        reaper.SetMediaTrackInfo_Value(proj.sampler_track, "I_FOLDERCOMPACT", 2) -- Set as a folder track
 
-        local subtrack_idx = reaper.GetMediaTrackInfo_Value(proj.sampler_track, "IP_TRACKNUMBER")
-        reaper.InsertTrackAtIndex(subtrack_idx, true)
-        local subtrack = reaper.GetTrack(0, subtrack_idx)
-        reaper.SetMediaTrackInfo_Value(subtrack, "I_FOLDERDEPTH", 0) -- Set as a child track
+    if proj.sampler_track == nil or not reaper.ValidatePtr(proj.sampler_track, "MediaTrack*") then --Create sampler track folder if it does not exist
+        local idx = reaper.CountTracks(0)
+        reaper.InsertTrackAtIndex(idx, true) --InsertTrackAtIndex
+        proj.sampler_track = reaper.GetTrack(0, idx) --GetTrack
+
+        reaper.GetSetMediaTrackInfo_String(proj.sampler_track, "P_NAME", "Sampler Track", true) --Change name
+        reaper.SetMediaTrackInfo_Value(proj.sampler_track, "I_FOLDERDEPTH", 1) -- Set as a folder track
+        reaper.SetMediaTrackInfo_Value(proj.sampler_track, "I_FOLDERCOMPACT", 2) -- Set folder as collapsed
+        reaper.UpdateArrange()
+
     end
+
     for i = 1, reaper.CountSelectedMediaItems(-1) do
+        --get src
         local item = reaper.GetSelectedMediaItem(-1, i-1)
         local tk = reaper.GetActiveTake(item)
         local src = reaper.GetMediaItemTake_Source(tk)
+        local filenamebuf = reaper.GetMediaSourceFileName(src, "")
+        filenamebuf = filenamebuf:gsub("\\", "/")
         local parent_src = reaper.GetMediaSourceParent(src)
 
-        print(reaper.ValidatePtr(proj.sampler_track, "MediaTrack*" ))
+        --create track
+        local subtrack_idx = reaper.GetMediaTrackInfo_Value(proj.sampler_track, "IP_TRACKNUMBER") --Get folder index
+        reaper.InsertTrackAtIndex(subtrack_idx, true) --InsertTrackAtIndex
+        local subtrack = reaper.GetTrack(0, subtrack_idx)
+        reaper.SetMediaTrackInfo_Value(subtrack, "I_FOLDERDEPTH", 0) -- Set as a child tracks
+        -- Set track to record MIDI input from Virtual MIDI Keyboard
+        reaper.SetMediaTrackInfo_Value(subtrack, "I_RECINPUT", 6080) -- All MIDI inputs (4096 = MIDI, 63 = all channels)
+        reaper.SetMediaTrackInfo_Value(subtrack, "I_RECMODE", 0) -- Set to record MIDI
+        reaper.SetMediaTrackInfo_Value(subtrack, "I_RECARM", 1) -- Arm track for recording
 
+        --add samplomatic
+        reaper.TrackFX_AddByName(subtrack, 'ReaSamplomatic5000', false, -1000)
+        reaper.TrackFX_SetNamedConfigParm(subtrack, 0, 'FILE0', filenamebuf)
         
     end
 end
