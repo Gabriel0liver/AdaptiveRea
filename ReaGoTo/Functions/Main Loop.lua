@@ -56,12 +56,27 @@ function main_loop()
     end
 end
 
+function GetCurrentRegionName(proj)
+    local pos = reaper.GetPlayStateEx(proj)&1 == 1 and reaper.GetPlayPositionEx(proj) or reaper.GetCursorPositionEx(proj)
+    local _, num_markers, num_regions = reaper.CountProjectMarkers(proj)
+    local total = num_markers + num_regions
+
+    for i = 0, total - 1 do
+        local retval, isrgn, rgn_start, rgn_end, name, idx = reaper.EnumProjectMarkers2(proj, i)
+        if isrgn and pos >= rgn_start and pos <= rgn_end then
+            return name
+        end
+    end
+    return nil -- Not currently in a region
+end
+
+
 function GetRegionNameFromIndex(region_index)
     local num_markers, num_regions = reaper.CountProjectMarkers(FocusedProj)
     for i = 0, num_markers + num_regions - 1 do
         local retval, is_region, pos, rgnend, name, idx = reaper.EnumProjectMarkers2(FocusedProj, i)
         if retval and is_region and idx == region_index then
-            return name -- Retorna el nombre de la región destino
+            return name -- Return region name
         end
     end
     return nil
@@ -72,7 +87,7 @@ function GetRegionStartTime(region_name)
     for i = 0, num_markers + num_regions - 1 do
         local retval, is_region, pos, rgnend, name, idx = reaper.EnumProjectMarkers2(FocusedProj, i)
         if retval and is_region and name == region_name then
-            return pos -- Retorna la posición de inicio de la región destino
+            return pos -- Return region start time
         end
     end
     return nil
@@ -165,17 +180,20 @@ function GoToCheck()
                 reaper.ShowConsoleMsg("GoToCheck: Índice = " .. tostring(goto_region_index) .. ", Nombre = " .. tostring(goto_region_name) .. ", Inicio = " .. tostring(goto_region_start) .. "\n")
                 reaper.ShowConsoleMsg("current_region = " .. tostring(current_region) .. "\n")
     
-                -- Si la región actual ha cambiado, limpiar played_transitions
-                if last_region ~= current_region then
-                    reaper.ShowConsoleMsg("Cambio de región detectado, limpiando transiciones previas.\n")
-                    played_transitions = {} -- Solo se reinicia cuando cambia de región
-                    last_region = current_region -- Guardar la nueva región actual
-                elseif not played_transitions then
-                    played_transitions = {} -- Asegurarnos de que esté inicializado
+                local current_region_name = GetCurrentRegionName(proj, pos)
+                if last_region ~= current_region_name then
+                    played_transitions = {}
+                    last_region = current_region_name
                 end
+                current_region = current_region_name
                     
     
                 if goto_region_name and goto_region_start then
+
+                    if current_region == goto_region_name then
+                        return
+                    end
+
                     if transitions[current_region] and transitions[current_region][goto_region_name] then
                         local transition_data = transitions[current_region][goto_region_name][1]
 
@@ -314,8 +332,9 @@ function GoToCheck()
                     if marker_name then
                         project_table.is_triggered = GetCommand(project_table.identifier,marker_name) or project_table.is_triggered
                     end
-                    ---- Goto ! 
-                    GoTo(project_table.is_triggered,proj)
+                    -- Goto ! 
+                    GoTo(project_table.is_triggered, proj)
+                    
                     ---- Add Markers at the trigger position for debugging mostly
                     if UserConfigs.add_markers then
                         reaper.AddProjectMarker(proj, false, pos, 0, '', 0) -- debug when it is happening
