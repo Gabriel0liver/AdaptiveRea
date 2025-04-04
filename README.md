@@ -32,9 +32,50 @@
 
 ## How to use
 ### Unity OSC
-- Open AdaptiveHost script and set port *(default 9002)*
 - Install [Unity OSC](https://t-o-f.info/UnityOSC/)
+- Open AdaptiveHost script and set port *(default 9000)*
+- Create and name the parameters you want to make use of in the scripts *(check each scripts HowToUse section)*
+- Create OSCTransmitter
+```c#
+// Creating a transmitter
+var transmitter = gameObject.AddComponent<OSCTransmitter>();
 
+// Set remote host address
+transmitter.RemoteHost = "127.0.0.1";    
+
+// Set port number also set in Adaptivehost
+transmitter.RemotePort = 9000;         
+```
+- Send Play Message
+```c#
+// Create message
+var message = new OSCMessage("play");
+
+// Send message
+transmitter.Send(message);      
+```
+- Send Stop Message
+ ```c#
+// Create message
+var message = new OSCMessage("stop");
+
+// Send message
+transmitter.Send(message);        
+```
+- Send Parameter value
+```c#
+  // To send parameter value first set message adress to "param"
+  var message = new OSCMessage("param");
+
+  //  First set name of the parameter as a string
+  message.AddValue(OSCValue.String("MyParam"));
+
+  // Add parameter value (accepts only float value with range 0-1)
+  message.AddValue(OSCValue.Float(0.78));
+
+  // Send message
+  transmitter.Send(message);
+```
 ### Layers
 ### GoTo
 ### Scatterer
