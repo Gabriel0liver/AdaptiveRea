@@ -55,8 +55,8 @@ ProjPaths = {} -- Table with the paths for each project tab. ProjPaths[proj] = p
 
 -- Gui Style
 GroupIndent = 15 -- indentation of the group child
-Gui_W_init = 275 -- Init 
-Gui_H_init = 450 -- Init 
+Gui_W_init = 150-- Init 
+Gui_H_init = 150 -- Init 
 FLTMIN, FLTMAX = reaper.ImGui_NumericLimits_Float() --set the padding to the right side
 
 -- Get socket and osc modules

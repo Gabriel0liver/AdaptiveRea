@@ -11,43 +11,26 @@ end
 
 
 function GuiMain(proj)
-    proj.scripts = {
-        {
-            name="LayersV2",
-            id="_RS666e3a9f2e2172c7ac28ad55b6c35440b8f66b1e"
-        },
-        {
-            name="ReaGoTo",
-            id=""
-        },
-        {
-            name="Scatterer",
-            id="_RS23012dc77199424d07862533c36e47f224275501"
-        }
-    }
-    if reaper.ImGui_BeginTabBar(ctx, 'Scripts', reaper.ImGui_TabBarFlags_Reorderable() | reaper.ImGui_TabBarFlags_AutoSelectNewTabs() ) then
-        local is_save
-        for script_key, script in ipairs(proj.scripts) do
-            local open, keep = reaper.ImGui_BeginTabItem(ctx, ('%s###tab%d'):format(script.name, script_key), false) -- Start each tab    
-
-            if open then
-                ScriptTab(script)
-                reaper.ImGui_EndTabItem(ctx) 
-            end
+    if reaper.ImGui_Button(ctx, "Open Layers", -FLTMIN) then -- Button to open the script
+        local command = reaper.NamedCommandLookup("")
+        if command then
+            reaper.Main_OnCommand(command, 0) -- Open the script
+        else
+            reaper.ShowMessageBox('Script not found. Please check the script ID.', 'Error', 0)
         end
-
-        if is_save then -- Save settings
-            SaveProjectSettings(FocusedProj, ProjConfigs[FocusedProj])
-        end
-        
-        reaper.ImGui_EndTabBar(ctx)
+    
     end
-end
-
-
-function ScriptTab(script)
-    if reaper.ImGui_Button(ctx, "Open " .. script.name, -FLTMIN) then -- Button to open the script
-        local command = reaper.NamedCommandLookup(script.id)
+    if reaper.ImGui_Button(ctx, "Open GoTo", -FLTMIN) then -- Button to open the script
+        local command = reaper.NamedCommandLookup("")
+        if command then
+            reaper.Main_OnCommand(command, 0) -- Open the script
+        else
+            reaper.ShowMessageBox('Script not found. Please check the script ID.', 'Error', 0)
+        end
+    
+    end
+    if reaper.ImGui_Button(ctx, "Open Scatterer", -FLTMIN) then -- Button to open the script
+        local command = reaper.NamedCommandLookup("")
         if command then
             reaper.Main_OnCommand(command, 0) -- Open the script
         else
@@ -57,116 +40,7 @@ function ScriptTab(script)
     end
 end
 
-function GroupTab(group)
-    local is_save -- if something changed than save
 
-    is_save, group.spawnrate = reaper.ImGui_SliderInt(ctx, "Spawn Rate", group.spawnrate, 0, 100, "%d%%")
-
-    local change_min, v_min = reaper.ImGui_InputInt(ctx, 'Min Interval ms', group.min, 1, 100)
-    local change_max, v_max = reaper.ImGui_InputInt(ctx, 'Max Interval ms', group.max, 1, 100)
-
-    if change_min or change_max then
-        group.min = v_min
-        group.max = v_max
-        is_save = true
-    end
-
-    local text = (group.mode == 0 and 'Random') or (group.mode == 1 and 'Shuffle') 
-    local open = reaper.ImGui_BeginCombo(ctx, '##ComboMode', text)
-    ToolTip(UserConfigs.tooltips,'Scatterer group mode')        
-    if open then
-        if reaper.ImGui_Selectable(ctx, 'Random', false) then
-            group.mode = 0
-            is_save = true
-        end
-        if reaper.ImGui_Selectable(ctx, 'Shuffle', false) then
-            group.mode = 1
-            is_save = true
-        end
-        reaper.ImGui_EndCombo(ctx)
-    end
-
-    SelectNotesModal(group)
-    if reaper.ImGui_Button(ctx, "Select Notes", -FLTMIN) then
-        reaper.ImGui_OpenPopup(ctx, 'SelectNotes')
-    end
-    
-    -- Each note
-    local avail_x, avail_y = reaper.ImGui_GetContentRegionAvail(ctx)
-    local line_size = reaper.ImGui_GetTextLineHeight(ctx)
-    local ci_size = 55 --chance_input_size
-    if reaper.ImGui_BeginChild(ctx, 'GroupSelect', -FLTMIN, avail_y-line_size*2, true) then
-        for k, v in pairs(group.sel_notes) do
-            reaper.ImGui_Text(ctx, v.note)
-        end
-        reaper.ImGui_EndChild(ctx)
-    end
-
-    is_save = change or is_save
-    if is_save then -- Save settings
-        SaveProjectSettings(FocusedProj, ProjConfigs[FocusedProj])
-    end
-
-end
-
-function SelectNotesModal(group)
-    if reaper.ImGui_BeginPopupModal(ctx, 'SelectNotes', nil, reaper.ImGui_WindowFlags_AlwaysAutoResize()) then
-        reaper.ImGui_BeginChild(ctx, 'SelectNotes', 100, 400, true)
-            local allNotes = group.all_notes
-            for k, v in ipairs(allNotes) do
-                local _
-                _, v.selected = reaper.ImGui_Selectable(ctx, v.note, v.selected)
-                    
-            end
-        reaper.ImGui_EndChild(ctx)
-        if( reaper.ImGui_Button(ctx, 'Close', -FLTMIN) ) then
-            reaper.ImGui_CloseCurrentPopup(ctx)
-            AddNotes(group)
-        end
-        reaper.ImGui_EndPopup(ctx)
-    end
-end
-
-function RenameGroupPopUp(group)
-    reaper.ImGui_Text(ctx, 'Edit group name:')
-    if reaper.ImGui_IsWindowAppearing(ctx) then
-        reaper.ImGui_SetKeyboardFocusHere(ctx)
-    end
-    _, group.name = reaper.ImGui_InputText(ctx, "##renameinput", group.name)
-    -- Enter
-    if reaper.ImGui_IsKeyDown(ctx, 13) then
-        reaper.ImGui_CloseCurrentPopup(ctx)
-    end
-end
-
-function RenameTakePopUp(group, k, take_name)
-    reaper.ImGui_Text(ctx, 'Edit take name:')
-    if reaper.ImGui_IsWindowAppearing(ctx) then
-        TempName = take_name -- Temporary holds the name as the user writes
-        reaper.ImGui_SetKeyboardFocusHere(ctx)
-    end
-    _, TempName = reaper.ImGui_InputText(ctx, "##renameinput", TempName)
-    -- remove button
-    if reaper.ImGui_Button(ctx, 'Remove Take', -FLTMIN) then
-        -- get if this take exist in the shuffle table
-        local retval, used_idx = TableHaveValue(group.used_idx, group[k])
-        if used_idx then
-            table.remove(group.used_idx,used_idx) -- remove from the main table
-        end
-        -- remove from the main table
-        table.remove(group,k) -- remove from the main table
-        -- che
-        if retval then table.remove(group.used_idx, used_idx) end -- remove from the shuffle table ( if is there )
-        return true
-    end
-    -- Show Child
-    reaper.ImGui_Separator(ctx)
-    
-    -- Enter close popup
-    if reaper.ImGui_IsKeyDown(ctx, 13) then
-        reaper.ImGui_CloseCurrentPopup(ctx)
-    end
-end
 
 function MenuBar()
     local function DockBtn()
