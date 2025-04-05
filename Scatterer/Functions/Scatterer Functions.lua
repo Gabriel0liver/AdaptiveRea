@@ -144,6 +144,9 @@ function AddTracksToSampler(proj)
         --add samplomatic
         reaper.TrackFX_AddByName(subtrack, 'ReaSamplomatic5000', false, -1000)
         reaper.TrackFX_SetNamedConfigParm(subtrack, 0, 'FILE0', filenamebuf)
+        -- Set the Note Range to Selected note
+        reaper.TrackFX_SetParamNormalized(subtrack, 0, 3, (proj.starting_note + i-2)/128)
+        reaper.TrackFX_SetParamNormalized(subtrack, 0, 4, (proj.starting_note + i-2)/128)
         
     end
 end
@@ -234,6 +237,7 @@ function CreateProjectConfigTable(project)
         oldisplay = is_play,
         is_loopchanged = false, -- If true then the script alternated the items in this loop
         sampler_track = nil,
+        starting_note = {},
     }   
     return t
 end

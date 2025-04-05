@@ -112,8 +112,10 @@ function GroupTab(group)
         reaper.ImGui_OpenPopup(ctx, 'SelectNotes')
     end
 
+    SelectSamplerNoteModal(ProjConfigs[FocusedProj], group)
     if reaper.ImGui_Button(ctx, "Add Tracks To Sampler", -FLTMIN) then
-        AddTracksToSampler(ProjConfigs[FocusedProj])
+        reaper.ImGui_OpenPopup(ctx, 'SelectSamplerNote')
+       
     end
     
     -- Each note
@@ -147,6 +149,26 @@ function SelectNotesModal(group)
         if( reaper.ImGui_Button(ctx, 'Close', -FLTMIN) ) then
             reaper.ImGui_CloseCurrentPopup(ctx)
             AddNotes(group)
+        end
+        reaper.ImGui_EndPopup(ctx)
+    end
+end
+
+function SelectSamplerNoteModal(proj,group)
+    if reaper.ImGui_BeginPopupModal(ctx, 'SelectSamplerNote', nil, reaper.ImGui_WindowFlags_AlwaysAutoResize()) then
+        reaper.ImGui_Text(ctx, 'Select starting note:')
+        reaper.ImGui_BeginChild(ctx, 'SelectNotes', 100, 400, true)
+            local allNotes = group.all_notes
+            for k, v in ipairs(allNotes) do
+                if reaper.ImGui_Selectable(ctx, v.note, proj.starting_note == k) then
+                    proj.starting_note = k
+                end
+                    
+            end
+        reaper.ImGui_EndChild(ctx)
+        if( reaper.ImGui_Button(ctx, 'Add', -FLTMIN) ) then
+            reaper.ImGui_CloseCurrentPopup(ctx)
+            AddTracksToSampler(proj)
         end
         reaper.ImGui_EndPopup(ctx)
     end
@@ -270,6 +292,13 @@ function MenuBar()
                 reaper.ImGui_EndMenu(ctx)
             end
             
+            reaper.ImGui_EndMenu(ctx)
+        end
+
+
+        if reaper.ImGui_BeginMenu(ctx, "Sampler") then
+            retval, optional_p_selected = reaper.ImGui_MenuItem(ctx, "Set Starting Note")
+            retval, optional_p_selected = reaper.ImGui_MenuItem(ctx, "Add Items to Sampler")
             reaper.ImGui_EndMenu(ctx)
         end
 
