@@ -107,7 +107,7 @@ function PlayShuffleNote(group)
     end
 end
 
-function AddTracksToSampler(proj)
+function AddTracksToSampler(proj,group)
     local initial_note = 0
 
     if proj.sampler_track == nil or not reaper.ValidatePtr(proj.sampler_track, "MediaTrack*") then --Create sampler track folder if it does not exist
@@ -141,9 +141,17 @@ function AddTracksToSampler(proj)
         reaper.SetMediaTrackInfo_Value(subtrack, "I_RECMODE", 0) -- Set to record MIDI
         reaper.SetMediaTrackInfo_Value(subtrack, "I_RECARM", 1) -- Arm track for recording
 
+        --Set sample track name
+        local name = filenamebuf
+        name = name:gsub('%\\','/')
+        if name then name = name:reverse():match('(.-)/') end
+        if name then name = name:reverse() end
+        reaper.GetSetMediaTrackInfo_String(subtrack, "P_NAME", group.all_notes[proj.starting_note+i-1].note .. " - " .. name, true) --Change name
+
         --add samplomatic
         reaper.TrackFX_AddByName(subtrack, 'ReaSamplomatic5000', false, -1000)
         reaper.TrackFX_SetNamedConfigParm(subtrack, 0, 'FILE0', filenamebuf)
+
         -- Set the Note Range to Selected note
         reaper.TrackFX_SetParamNormalized(subtrack, 0, 3, (proj.starting_note + i-2)/128)
         reaper.TrackFX_SetParamNormalized(subtrack, 0, 4, (proj.starting_note + i-2)/128)

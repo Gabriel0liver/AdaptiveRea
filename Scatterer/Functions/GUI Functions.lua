@@ -158,8 +158,7 @@ function SelectSamplerNoteModal(proj,group)
     if reaper.ImGui_BeginPopupModal(ctx, 'SelectSamplerNote', nil, reaper.ImGui_WindowFlags_AlwaysAutoResize()) then
         reaper.ImGui_Text(ctx, 'Select starting note:')
         reaper.ImGui_BeginChild(ctx, 'SelectNotes', 100, 400, true)
-            local allNotes = group.all_notes
-            for k, v in ipairs(allNotes) do
+            for k, v in ipairs(group.all_notes) do
                 if reaper.ImGui_Selectable(ctx, v.note, proj.starting_note == k) then
                     proj.starting_note = k
                 end
@@ -168,7 +167,7 @@ function SelectSamplerNoteModal(proj,group)
         reaper.ImGui_EndChild(ctx)
         if( reaper.ImGui_Button(ctx, 'Add', -FLTMIN) ) then
             reaper.ImGui_CloseCurrentPopup(ctx)
-            AddTracksToSampler(proj)
+            AddTracksToSampler(proj,group)
         end
         reaper.ImGui_EndPopup(ctx)
     end
