@@ -346,6 +346,22 @@ function GoToCheck()
             GoTo(project_table.is_triggered,proj)
         end
 
+        if current_region then
+            local region_start = GetRegionStartTime(current_region)
+            local region_end = GetRegionEndTime(current_region)
+        
+            if region_start and region_end then
+                for from_region, targets in pairs(transitions) do
+                    if targets[current_region] then
+                        local transition = targets[current_region][1]
+                        if transition and transition.track then
+                            RemoveMIDINotesAfterPlayback(transition.track, region_start, region_end)
+                        end
+                    end
+                end
+            end
+        end
+        
 
         -- Update values
         project_table.oldtime = time
@@ -469,35 +485,31 @@ end
 
 
 function RemoveMIDINotesAfterPlayback(track_name, region_start, region_end)
-    local track_count = reaper.CountTracks(0)
-    local play_pos = reaper.GetPlayPosition() -- Posición de reproducción actual
+    local play_pos = reaper.GetPlayPosition()
 
-    reaper.ShowConsoleMsg("Borrando notas... Región: " .. tostring(region_start) .. " - " .. tostring(region_end) .. "\n")
+    if play_pos < region_start or play_pos > region_end then
+        return -- Solo si estamos dentro de la región
+    end
 
-    for i = 0, track_count - 1 do
+    for i = 0, reaper.CountTracks(0) - 1 do
         local track = reaper.GetTrack(0, i)
         local _, name = reaper.GetTrackName(track, "")
 
         if name == track_name then
             local item_count = reaper.CountTrackMediaItems(track)
-            reaper.ShowConsoleMsg("Encontrados " .. item_count .. " ítems en la pista: " .. track_name .. "\n")
 
             for j = item_count - 1, 0, -1 do
                 local item = reaper.GetTrackMediaItem(track, j)
                 local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
 
-                -- Mostrar información sobre cada ítem
-                reaper.ShowConsoleMsg("Ítem en posición: " .. tostring(item_pos) .. "\n")
-
-                -- Solo borrar si estamos dentro de la región destino actual
-                if play_pos >= region_start and play_pos <= region_end then
-                    if item_pos >= region_start and item_pos <= region_end then
-                        reaper.DeleteTrackMediaItem(track, item)
-                        reaper.ShowConsoleMsg("Nota eliminada en " .. item_pos .. "\n")
-                    end
+                -- Solo borrar si la nota ya ha sonado y está en la región
+                if item_pos >= region_start and item_pos <= region_end and play_pos > item_pos then
+                    reaper.DeleteTrackMediaItem(track, item)
+                    reaper.ShowConsoleMsg("Nota eliminada en " .. item_pos .. "\n")
                 end
             end
-            reaper.UpdateArrange() -- Actualizar solo una vez por pista
+
+            reaper.UpdateArrange()
         end
     end
 end
