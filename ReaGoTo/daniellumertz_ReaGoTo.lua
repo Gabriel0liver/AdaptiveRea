@@ -54,8 +54,8 @@ Gui_W_init = 275 -- Init
 Gui_H_init = 450 -- Init 
 FLTMIN, FLTMAX = reaper.ImGui_NumericLimits_Float() --set the padding to the right side
 transitions = transitions or {}
-current_region = "Intro"
-target_regions = {"Main"}
+current_region = GetCurrentRegionName(0)
+target_regions = GetAllRegionNamesExceptCurrent(0, current_region)
 
 
 -- Start
