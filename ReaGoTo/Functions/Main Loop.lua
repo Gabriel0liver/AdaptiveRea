@@ -107,6 +107,21 @@ function GetRegionEndTime(region_name)
     return nil -- If region not found
 end
 
+function GetAllRegionNamesExceptCurrent(proj, current)
+    local region_names = {}
+    local _, num_markers, num_regions = reaper.CountProjectMarkers(proj)
+    local total = num_markers + num_regions
+
+    for i = 0, total - 1 do
+        local retval, isrgn, _, _, name = reaper.EnumProjectMarkers2(proj, i)
+        if isrgn and name and name ~= "" and name ~= current then
+            table.insert(region_names, name)
+        end
+    end
+
+    return region_names
+end
+
 played_transitions = played_transitions or {}
 last_region = nil
 
@@ -169,16 +184,18 @@ function GoToCheck()
             local playrate = reaper.Master_GetPlayRate(proj)
             local defer_in_proj_sec = (delta * UserConfigs.compensate) * playrate -- how much project sec each defer loop runs. avarage.
 
+
+            -- (Transitions: Data Verification and Note insertion)
             ------------------------------------------
+
             if project_table.is_triggered then
-                reaper.ShowConsoleMsg("is_triggered = " .. tostring(project_table.is_triggered) .. "\n")
-    
+
                 local goto_region_index = tonumber(project_table.is_triggered:match("goto(%d+)"))
                 local goto_region_name = GetRegionNameFromIndex(goto_region_index)
                 local goto_region_start = GetRegionStartTime(goto_region_name)
     
-                reaper.ShowConsoleMsg("GoToCheck: Índice = " .. tostring(goto_region_index) .. ", Nombre = " .. tostring(goto_region_name) .. ", Inicio = " .. tostring(goto_region_start) .. "\n")
-                reaper.ShowConsoleMsg("current_region = " .. tostring(current_region) .. "\n")
+                -- reaper.ShowConsoleMsg("GoToCheck: Index = " .. tostring(goto_region_index) .. ", Name = " .. tostring(goto_region_name) .. ", Start = " .. tostring(goto_region_start) .. "\n")
+                -- reaper.ShowConsoleMsg("current_region = " .. tostring(current_region) .. "\n")
     
                 local current_region_name = GetCurrentRegionName(proj, pos)
                 if last_region ~= current_region_name then
@@ -200,11 +217,11 @@ function GoToCheck()
                         if transition_data and transition_data.track and transition_data.note and transition_data.octave then
                             local transition_key = current_region .. "->" .. goto_region_name
 
-                            -- Verificar si la nota ya fue insertada para esta transición
+                            -- Verify: Note already inserted for this transition?
                             if not played_transitions[transition_key] then
                                 InsertMIDINote(transition_data.track, transition_data.note, transition_data.octave, goto_region_start)
 
-                                -- Marcar esta transición como ya ejecutada
+                                -- Mark transition as already inserted
                                 played_transitions[transition_key] = true
 
                                 reaper.defer(
@@ -213,20 +230,21 @@ function GoToCheck()
                                     end)
 
                             else
-                                reaper.ShowConsoleMsg("Nota ya insertada para esta transición, omitiendo...\n")
+                                -- reaper.ShowConsoleMsg("Note already inserted\n")
                             end
                         else
-                            reaper.ShowConsoleMsg("No hay datos de transición en transitions[" .. tostring(current_region) .. "][" .. tostring(goto_region_name) .. "]\n")
+                            -- reaper.ShowConsoleMsg("No transition data in transitions[" .. tostring(current_region) .. "][" .. tostring(goto_region_name) .. "]\n")
                         end
                     else
-                        reaper.ShowConsoleMsg("No hay transiciones registradas para " .. tostring(current_region) .. "\n")
+                        reaper.ShowConsoleMsg("No registered transitions for " .. tostring(current_region) .. "\n")
                     end
                 else
-                    reaper.ShowConsoleMsg("No se pudo encontrar el inicio de la región con índice " .. tostring(goto_region_index) .. "\n")
+                    reaper.ShowConsoleMsg("Couldn't find start of region of index " .. tostring(goto_region_index) .. "\n")
                 end
             end
 
             ------------------------------------------
+
 
             --- functions
             local function proj_position_in_defer_range(trigger_point, ignore_smooth)        
@@ -346,6 +364,23 @@ function GoToCheck()
             GoTo(project_table.is_triggered,proj)
         end
 
+        -- Remove played transition notes in this region.
+        if current_region then
+            local region_start = GetRegionStartTime(current_region)
+            local region_end = GetRegionEndTime(current_region)
+        
+            if region_start and region_end then
+                for from_region, targets in pairs(transitions) do
+                    if targets[current_region] then
+                        local transition = targets[current_region][1]
+                        if transition and transition.track then
+                            RemoveMIDINotesAfterPlayback(transition.track, region_start, region_end)
+                        end
+                    end
+                end
+            end
+        end
+        
 
         -- Update values
         project_table.oldtime = time
@@ -442,7 +477,7 @@ function InsertMIDINote(track_name, note, octave, region_start)
             local midi_item = reaper.CreateNewMIDIItemInProj(track, region_start, region_start + 1, false)
             local take = reaper.GetMediaItemTake(midi_item, 0)
             if not take then
-                reaper.ShowConsoleMsg("Couldn´t find valid take\n")
+                reaper.ShowConsoleMsg("Couldn't find valid take\n")
                 return
             end
 
@@ -463,41 +498,37 @@ function InsertMIDINote(track_name, note, octave, region_start)
     end
 
     if not track_found then
-        reaper.ShowConsoleMsg("Coulnd´t find track " .. track_name .. "\n")
+        reaper.ShowConsoleMsg("Couldn't find track " .. track_name .. "\n")
     end
 end
 
 
 function RemoveMIDINotesAfterPlayback(track_name, region_start, region_end)
-    local track_count = reaper.CountTracks(0)
-    local play_pos = reaper.GetPlayPosition() -- Posición de reproducción actual
+    local play_pos = reaper.GetPlayPosition()
 
-    reaper.ShowConsoleMsg("Borrando notas... Región: " .. tostring(region_start) .. " - " .. tostring(region_end) .. "\n")
+    if play_pos < region_start or play_pos > region_end then
+        return -- Only if within region
+    end
 
-    for i = 0, track_count - 1 do
+    for i = 0, reaper.CountTracks(0) - 1 do
         local track = reaper.GetTrack(0, i)
         local _, name = reaper.GetTrackName(track, "")
 
         if name == track_name then
             local item_count = reaper.CountTrackMediaItems(track)
-            reaper.ShowConsoleMsg("Encontrados " .. item_count .. " ítems en la pista: " .. track_name .. "\n")
 
             for j = item_count - 1, 0, -1 do
                 local item = reaper.GetTrackMediaItem(track, j)
                 local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
 
-                -- Mostrar información sobre cada ítem
-                reaper.ShowConsoleMsg("Ítem en posición: " .. tostring(item_pos) .. "\n")
-
-                -- Solo borrar si estamos dentro de la región destino actual
-                if play_pos >= region_start and play_pos <= region_end then
-                    if item_pos >= region_start and item_pos <= region_end then
-                        reaper.DeleteTrackMediaItem(track, item)
-                        reaper.ShowConsoleMsg("Nota eliminada en " .. item_pos .. "\n")
-                    end
+                -- Delete only if already played and within current region
+                if item_pos >= region_start and item_pos <= region_end and play_pos > item_pos then
+                    reaper.DeleteTrackMediaItem(track, item)
+                    -- reaper.ShowConsoleMsg("Note deleted in " .. item_pos .. "\n")
                 end
             end
-            reaper.UpdateArrange() -- Actualizar solo una vez por pista
+
+            reaper.UpdateArrange()
         end
     end
 end
