@@ -24,6 +24,7 @@ dofile(ScriptPath .. 'Functions/Json Main.lua') -- Functions for using the marko
 dofile(ScriptPath .. 'Functions/Settings.lua') -- Functions for using the markov in reaper
 dofile(ScriptPath .. 'Functions/Serialize Functions.lua') -- Functions for using the markov in reaper
 dofile(ScriptPath .. 'Functions/BirdBird Curve Editor.lua') -- Functions for using the markov in reaper
+dofile(ScriptPath .. 'Functions/Sampler Functions.lua') -- Functions for using the markov in reaper
 
 
 if not CheckReaImGUI('0.8') or not CheckJS() or not CheckSWS() or not CheckREAPERVersion('6.0') then return end -- Check Extensions
@@ -45,7 +46,7 @@ ProjPaths = {} -- Table with the paths for each project tab. ProjPaths[proj] = p
 
 -- Gui Style
 GroupIndent = 15 -- indentation of the group child
-Gui_W_init = 275 -- Init 
+Gui_W_init = 300 -- Init 
 Gui_H_init = 450 -- Init 
 FLTMIN, FLTMAX = reaper.ImGui_NumericLimits_Float() --set the padding to the right side
 

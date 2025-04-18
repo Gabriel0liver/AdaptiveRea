@@ -38,6 +38,7 @@ function main_loop()
     ReadMem()
     
     if visible then
+
         MenuBar()
         local _ --  values I will throw away
         --- GUI MAIN: 

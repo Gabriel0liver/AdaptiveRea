@@ -13,6 +13,9 @@ function GroupSelector(groups)
     -- calculate positions
     local _
     -- tabs
+
+    
+
     if reaper.ImGui_BeginTabBar(ctx, 'Groups', reaper.ImGui_TabBarFlags_Reorderable() | reaper.ImGui_TabBarFlags_AutoSelectNewTabs() ) then
         local is_save
         for group_key, group in ipairs(groups) do
@@ -111,12 +114,6 @@ function GroupTab(group)
     if reaper.ImGui_Button(ctx, "Select Notes", -FLTMIN) then
         reaper.ImGui_OpenPopup(ctx, 'SelectNotes')
     end
-
-    SelectSamplerNoteModal(ProjConfigs[FocusedProj], group)
-    if reaper.ImGui_Button(ctx, "Add Tracks To Sampler", -FLTMIN) then
-        reaper.ImGui_OpenPopup(ctx, 'SelectSamplerNote')
-       
-    end
     
     -- Each note
     local avail_x, avail_y = reaper.ImGui_GetContentRegionAvail(ctx)
@@ -155,7 +152,7 @@ function SelectNotesModal(group)
 end
 
 function SelectSamplerNoteModal(proj,group)
-    if reaper.ImGui_BeginPopupModal(ctx, 'SelectSamplerNote', nil, reaper.ImGui_WindowFlags_AlwaysAutoResize()) then
+    if reaper.ImGui_BeginPopupModal(ctx, 'Select Starting Note', nil, reaper.ImGui_WindowFlags_AlwaysAutoResize()) then
         reaper.ImGui_Text(ctx, 'Select starting note:')
         reaper.ImGui_BeginChild(ctx, 'SelectNotes', 100, 400, true)
             for k, v in ipairs(group.all_notes) do
@@ -165,9 +162,8 @@ function SelectSamplerNoteModal(proj,group)
                     
             end
         reaper.ImGui_EndChild(ctx)
-        if( reaper.ImGui_Button(ctx, 'Add', -FLTMIN) ) then
+        if( reaper.ImGui_Button(ctx, 'Set', -FLTMIN) ) then
             reaper.ImGui_CloseCurrentPopup(ctx)
-            AddTracksToSampler(proj,group)
         end
         reaper.ImGui_EndPopup(ctx)
     end
@@ -229,6 +225,7 @@ function MenuBar()
     end
     
     local _
+
 
     if reaper.ImGui_BeginMenuBar(ctx) then
         if reaper.ImGui_BeginMenu(ctx, 'Settings') then
@@ -294,12 +291,28 @@ function MenuBar()
             reaper.ImGui_EndMenu(ctx)
         end
 
+        local popup = false
+
+        
 
         if reaper.ImGui_BeginMenu(ctx, "Sampler") then
-            retval, optional_p_selected = reaper.ImGui_MenuItem(ctx, "Set Starting Note")
-            retval, optional_p_selected = reaper.ImGui_MenuItem(ctx, "Add Items to Sampler")
+            if reaper.ImGui_MenuItem(ctx, 'Select Starting Note') then
+               popup = true
+            end
+            if reaper.ImGui_MenuItem(ctx, "Copy Items to Sampler") then
+                AddTracksToSampler(ProjConfigs[FocusedProj],false)
+            end
+            if reaper.ImGui_MenuItem(ctx, "Move Items to Sampler") then
+                AddTracksToSampler(ProjConfigs[FocusedProj],true)
+            end
             reaper.ImGui_EndMenu(ctx)
         end
+
+        if(popup) then
+            reaper.ImGui_OpenPopup(ctx, 'Select Starting Note')
+        end
+
+        SelectSamplerNoteModal(ProjConfigs[FocusedProj],ProjConfigs[FocusedProj].groups[1])
 
         _, GuiSettings.Pin = reaper.ImGui_MenuItem(ctx, 'Pin', optional_shortcutIn, GuiSettings.Pin)
 
