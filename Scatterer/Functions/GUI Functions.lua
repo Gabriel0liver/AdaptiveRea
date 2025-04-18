@@ -292,9 +292,6 @@ function MenuBar()
         end
 
         local popup = false
-
-        
-
         if reaper.ImGui_BeginMenu(ctx, "Sampler") then
             if reaper.ImGui_MenuItem(ctx, 'Select Starting Note') then
                popup = true

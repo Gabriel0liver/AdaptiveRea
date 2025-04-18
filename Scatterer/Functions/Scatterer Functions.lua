@@ -12,11 +12,11 @@ end
 
 function Scatter(proj)
     local now = reaper.time_precise()
-    if proj.playing then
-        for group_idx, group in ipairs(proj.groups) do
+    if proj.playing then 
+        for group_idx, group in ipairs(proj.groups) do --for every group
             group.next_time = group.next_time or 0
-            if (group.spawnrate > 0) and (now >= group.next_time) then
-                if(group.min <= group.max) then
+            if (group.spawnrate > 0) and (now >= group.next_time) then --if time to spawn
+                if(group.min <= group.max) then --set next spawn time
                     local multiplier = group.spawnrate/100
                     local min = math.floor(group.min / multiplier) 
                     local max = math.floor(group.max / multiplier)
@@ -25,6 +25,7 @@ function Scatter(proj)
                     group.next_time = now + group.min / 1000
                 end
                 
+                -- Depending on the mode play a note
                 if group.mode == 0 then
                     PlayRandomNote(group)
                 elseif group.mode == 1 then
@@ -58,26 +59,15 @@ function ReadMem()
 end
 
 function PlayRandomNote(group)
-
-    --[[
-    local random_val = math.random(add) - 1 -- make it start at 0
-            -- get idx on the table
-            local chance_add = 0
-            for k, v in ipairs(group) do
-                chance_add = chance_add + v.chance
-                if random_val < chance_add then 
-                    sel_idx = k
-                    break
-                end
-            end
-    ]]
-
+    --Selects a random note from the selected notes
     local notes = {}
     for k in pairs(group.sel_notes) do
         notes[#notes+1] = k
     end
     local randomNoteK = notes[math.random(#notes)]
     local note = group.sel_notes[randomNoteK]
+    
+    --Send the note to midi virtual keyboard
     if note then
         reaper.StuffMIDIMessage(0, 9*16, note.number, 100);
         reaper.StuffMIDIMessage(0, 8*16, note.number, 100);
@@ -99,7 +89,7 @@ function PlayShuffleNote(group)
     local randomNoteK = notes[math.random(#notes)]
     local note = group.shuffle_list[randomNoteK]
     
-    --play note
+    --Send the note to midi virtual keyboard
     if note then
         group.shuffle_list[randomNoteK] = nil --remove note from available notes
         reaper.StuffMIDIMessage(0, 9*16, note.number, 100);
@@ -193,7 +183,7 @@ function CreateProjectConfigTable(project)
         oldisplay = is_play,
         is_loopchanged = false, -- If true then the script alternated the items in this loop
         sampler_track = nil,
-        starting_note = 60,
+        starting_note = 60, --Starting note when adding tracks to sampler
     }   
     return t
 end
