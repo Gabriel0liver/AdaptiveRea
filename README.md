@@ -77,6 +77,14 @@ transmitter.Send(message);
   transmitter.Send(message);
 ```
 ### Layers
+- Set Parameter Name  
+![imagen](https://github.com/user-attachments/assets/af41bc3f-e97d-4623-a5a5-8aaae45a9edf)  
+Set the parameter name by right clicking on desired tab and change to same name of parameter beign sent through OSC
+- Select track/s to paramatize and click on "Add Track Volume" if wanting to modify volume level or "Add Fx Param" if wanting to modify value of a parameter of an effect  
+![imagen](https://github.com/user-attachments/assets/fedfff7f-708c-4c66-ad95-13122ec345c9)
+- Modify curves to desired value response to the parameter  
+![imagen](https://github.com/user-attachments/assets/d82d12cf-5d99-4c1a-8819-074287c4759e)
+
 ### GoTo
 ### Scatterer
 
