@@ -11,10 +11,31 @@ end
 
 
 function GuiMain(proj)
+    local change 
+
+    reaper.ImGui_Text(ctx, "Currently listening on:")
+    reaper.ImGui_Text(ctx, "Address - " .. IPAddress)
+    reaper.ImGui_Text(ctx, "Port - " .. Port)
+
+    
+    reaper.ImGui_PushItemWidth(ctx, reaper.ImGui_GetContentRegionAvail(ctx) * 0.5 - 2)
+    change, proj.port = reaper.ImGui_InputInt(ctx, "##", proj.port, 0, 0, 0) -- Input for the port
+    reaper.ImGui_SameLine(ctx)
+    if reaper.ImGui_Button(ctx, "Set Port", reaper.ImGui_GetContentRegionAvail(ctx), 0) then -- Button to set the port
+        Port = proj.port
+        udp:close() -- Close the old socket
+        udp = assert(socket.udp()) -- Create a new socket
+        assert(udp:setsockname(IPAddress,Port)) -- Set the new IP and PORT
+        udp:settimeout(0.0001) -- Set a low timeout
+    end
+
+    reaper.ImGui_Separator(ctx)
+
     if reaper.ImGui_Button(ctx, "Open Layers", -FLTMIN) then -- Button to open the script
-        local command = reaper.NamedCommandLookup("")
+        local command = reaper.NamedCommandLookup("_RS666e3a9f2e2172c7ac28ad55b6c35440b8f66b1e")
+        print(reaper.ReverseNamedCommandLookup(command))
         if command then
-            reaper.Main_OnCommand(command, 0) -- Open the script
+           -- reaper.Main_OnCommand(command, 0) -- Open the script
         else
             reaper.ShowMessageBox('Script not found. Please check the script ID.', 'Error', 0)
         end
@@ -37,6 +58,10 @@ function GuiMain(proj)
             reaper.ShowMessageBox('Script not found. Please check the script ID.', 'Error', 0)
         end
     
+    end
+
+    if change then
+        SaveProjectSettings(proj, ProjConfigs[FocusedProj]) -- Save the project settings   
     end
 end
 

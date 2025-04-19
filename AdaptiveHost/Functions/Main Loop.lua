@@ -9,8 +9,11 @@ function main_loop()
     end
 
     CheckProjects()
-    --AlternateLoop() 
-
+    
+    if FirstLoop then
+        StartListener()
+        FirstLoop = false
+    end
 
     ------------ Window management area
     --- Flags
@@ -62,56 +65,15 @@ function main_loop()
 end
 
 --- Check for each project if need to trigger Alternate
-function AlternateLoop()
-    local proj_t = (UserConfigs.only_focus_project and {ProjConfigs[FocusedProj]}) or ProjConfigs -- if only_focus_project will be a table with the focused project only else will do for all open projectes
-    for proj, project_table in pairs(proj_t) do
-        local trigger = false -- is going to trigger randomizer?
-        -- Get play pos/state
-        local is_play = reaper.GetPlayStateEx(proj)&1 == 1 -- is playing 
-        local pos =  (is_play and reaper.GetPlayPositionEx( proj )) or reaper.GetCursorPositionEx(proj) -- current pos
-        local time = reaper.time_precise()
-        local loop_start, loop_end = reaper.GetSet_LoopTimeRange2(proj, false, true, 0, 0, false)
-        local is_repeat =  reaper.GetSetRepeat( -1 ) == 1 -- query = -1 
-        is_repeat = is_repeat and (loop_start ~= loop_end)-- Does it have an area selected? does it have repeat on ? 
 
-        if not FirstRun then -- prevent it alternating at an stopped project
-            -- if stoped
-            if project_table.oldisplay and not is_play then
-                trigger = 'stop'
-            end
+function StartListener()
+-- Get UDP
+    Port = ProjConfigs[FocusedProj].port or Port
+    udp = assert(socket.udp())
+    assert(udp:setsockname(IPAddress,Port)) -- Set IP and PORT
+    udp:settimeout(0.0001) -- Dont forget to set a low timeout! udp:receive block until have a message or timeout. values like (1) will make REAPER laggy.
 
-            -- At loop start and at stop reset AlteredAtThisLoop 
-            if (is_play and pos < project_table.oldpos) or (not is_play and project_table.oldisplay) then
-                project_table.is_loopchanged = false
-            end
-
-            -- if looped (only if it is playing)
-            if is_play and is_repeat and not project_table.is_loopchanged then
-                -- Calculate the delta time
-                local delta =  time - project_table.oldtime
-                -- Estimate next defer cycle position, check if is after the loop end. Always estimate a little longer to compensate for defer instability. This can cause to trigger twice. Use a variable that reset each loop start to prevent that.
-                local playrate = reaper.Master_GetPlayRate(proj)
-                if pos + (delta * UserConfigs.compensate) * playrate >= loop_end and project_table.oldpos < loop_end then 
-                    trigger = 'loop'
-                    project_table.is_loopchanged = true
-                    if UserConfigs.add_markers then
-                        reaper.AddProjectMarker(proj, false, pos, 0, '', 0) -- debug when it is happening
-                    end
-                end
-            end
-        end
-
-        -- Update values
-        project_table.oldtime = time
-        project_table.oldpos = pos
-        project_table.oldisplay = is_play
-    end
-
-    if FirstRun then 
-        FirstRun = nil
-    end
 end
-
 
 function CheckProjects()
     local projects_opened = {} -- to check if some project closed

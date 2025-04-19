@@ -63,11 +63,10 @@ FLTMIN, FLTMAX = reaper.ImGui_NumericLimits_Float() --set the padding to the rig
 socket = require('socket.core')
 osc = require('osc')
 
--- Get UDP
-udp = assert(socket.udp())
-assert(udp:setsockname("127.0.0.1",9004)) -- Set IP and PORT
-udp:settimeout(0.0001) -- Dont forget to set a low timeout! udp:receive block until have a message or timeout. values like (1) will make REAPER laggy.
+IPAddress = "127.0.0.1"
+Port = 9004
 
+FirstLoop = true -- prevent triggering on the first loop
 
 -- Start
 FirstRun = true -- prevent triggering on the first loop
