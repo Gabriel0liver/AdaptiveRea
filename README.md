@@ -62,6 +62,17 @@ var message = new OSCMessage("stop");
 // Send message
 transmitter.Send(message);        
 ```
+- Change BPM value
+```c#
+// Create message
+var message = new OSCMessage("BPM");
+
+//  Add new BPM value
+  message.AddValue(OSCValue.Int(150));
+
+// Send message
+transmitter.Send(message);      
+```
 - Send Parameter value
 ```c#
   // To send parameter value first set message adress to "param"
@@ -87,6 +98,23 @@ Set the parameter name by right clicking on desired tab and change to same name 
 
 ### GoTo
 ### Scatterer
+- Set Parameter Name  
+![imagen](https://github.com/user-attachments/assets/91484285-b5b7-4534-9928-995fea85e43a)  
+Set the parameter name by right clicking on desired group tab and change to same name of parameter beign sent through OSC
+
+- Set desired min max interval and spawn rate curve  
+![imagen](https://github.com/user-attachments/assets/8a0b03f7-30a1-4638-886f-683ae4d9671a)  
+Midi notes will be spawned inside the set interval when spawn rate 100%. Spawn rate acts a multiplyer to the interval (50% Spawnrate will double interval values)  
+
+- Select playlist mode  
+![imagen](https://github.com/user-attachments/assets/b75a1781-2254-452d-96ff-8824e14c51ed)  
+Random will play a random note each time. Shuffle will create a playlist that regenerates after each playthrough  
+
+- Select MIDI notes to be sent to Virtual Keyboard
+- Add audio files to desired sampler (If using ReaSamplOmatic items can be quicky added by using Copy/Move Items to Sampler in menu bar)  
+![imagen](https://github.com/user-attachments/assets/08b56188-6d39-4913-b9c4-a04918893c02)
+
+
 
 ## Credits
 
