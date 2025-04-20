@@ -268,7 +268,7 @@ function AtExit()
 end
 
 function ReadMem()
-    reaper.gmem_attach("LayersV2") -- Attach to the gmem
+    reaper.gmem_attach("layersv2") -- Attach to the gmem
     if reaper.gmem_read(0) == 1 then
         local parameters = ProjConfigs[FocusedProj].parameters
 

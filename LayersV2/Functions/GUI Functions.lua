@@ -142,17 +142,7 @@ function TargetsTab(parameter, parameter_key)
 
     ToolTip(UserConfigs.tooltips,'ADD selected track as targets for this parameter.\nHold alt to SET selected tracks as the targets for this parameter.\nEach track will only be in one parameter at the same time.')
 
-    ---- Targets Curves and options
---[[
-    --Get the table in project order
-    local targets_organized = {}
-    for track, target in pairs(parameter.targets) do
-        print(track)
-        local idx = reaper.GetMediaTrackInfo_Value( target.track, 'IP_TRACKNUMBER' )
-        targets_organized[idx] = target
-    end
-    targets_organized = TableRemoveSpaceKeys(targets_organized)
-]]
+ 
     reaper.ImGui_Separator(ctx)
     for targetName, target in pairs(parameter.targets) do
         local track = target.track
@@ -464,45 +454,7 @@ function MenuBar()
 
             reaper.ImGui_EndMenu(ctx)
         end
-
-
-
-        if reaper.ImGui_BeginMenu(ctx, 'About') then
-            if reaper.ImGui_MenuItem(ctx, 'Donate') then
-                open_url('https://www.paypal.com/donate/?hosted_button_id=RWA58GZTYMZ3N')
-            end
-            ToolTip(true, 'Recommended donation 20$ - 40$')
-
-            if reaper.ImGui_MenuItem(ctx, 'Forum') then
-                open_url('https://forum.cockos.com/showthread.php?t=276313')
-            end
-
-            if reaper.ImGui_BeginMenu(ctx, 'Videos') then
-                if reaper.ImGui_MenuItem(ctx, 'Introduction') then
-                    open_url('https://youtu.be/dyoWlduQIAg')
-                end  
-
-                if reaper.ImGui_MenuItem(ctx, 'Layers') then
-                    open_url('https://youtu.be/qfoRAYN-1q4')
-                end  
-
-                if reaper.ImGui_MenuItem(ctx, 'Alternator') then
-                    open_url('https://youtu.be/Oh1xKXGrSFA')
-                end  
-
-                if reaper.ImGui_MenuItem(ctx, 'ReaGoTo') then
-                    open_url('https://youtu.be/mwXdwAlXXuU')
-                end  
-
-                if reaper.ImGui_MenuItem(ctx, 'Advanced Settings') then
-                    open_url('https://youtu.be/KWM4EhEz8aY')
-                end  
-
-                reaper.ImGui_EndMenu(ctx)
-            end
-
-            reaper.ImGui_EndMenu(ctx)
-        end
+       
         _, GuiSettings.Pin = reaper.ImGui_MenuItem(ctx, 'Pin', optional_shortcutIn, GuiSettings.Pin)
 
         DockBtn()
