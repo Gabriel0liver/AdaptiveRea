@@ -8,6 +8,8 @@ function RecieveOSC()
             reaper.Main_OnCommand(40044, 0) -- Play
         elseif v.address == 'stop' then
             reaper.Main_OnCommand(1016, 0) -- Stop
+        elseif v.address == 'bpm' then
+            reaper.SetCurrentBPM(0, v.values[1], true) -- Set the BPM
         elseif v.address == 'param' then -- Set a parameter
         for i = 1, #scripts do --send the parameter to the each scripts gmem
             local script = scripts[i]

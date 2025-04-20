@@ -64,7 +64,7 @@ socket = require('socket.core')
 osc = require('osc')
 
 IPAddress = "127.0.0.1"
-Port = 9004
+Port = 9000
 
 FirstLoop = true -- prevent triggering on the first loop
 
