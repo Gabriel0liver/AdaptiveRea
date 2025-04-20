@@ -9,20 +9,6 @@ function GuiInit(ScriptName)
     reaper.ImGui_Attach(ctx, FontTiny)
 end
 
-_G_ConditionalJumps = _G_ConditionalJumps or {}
-local ConditionalJumps = _G_ConditionalJumps
-
--- Conditions, such as 'a > 0.5'
-function EvaluateCondition(param_value, op, value)
-    if op == ">" then return param_value > value
-    elseif op == "<" then return param_value < value
-    elseif op == ">=" then return param_value >= value
-    elseif op == "<=" then return param_value <= value
-    elseif op == "==" then return param_value == value
-    elseif op == "!=" or op == "~=" then return param_value ~= value
-    else return false end
-end
-
 
 function GuiMain(proj)
     local change 
@@ -41,30 +27,15 @@ function GuiMain(proj)
         udp = assert(socket.udp()) -- Create a new socket
         assert(udp:setsockname(IPAddress,Port)) -- Set the new IP and PORT
         udp:settimeout(0.0001) -- Set a low timeout
-
     end
-end
 
--- Check and perform Conditional Jumps
-function CheckConditionalJumps(current_region)
-    for _, rule in ipairs(ConditionalJumps) do
-        if rule.from == current_region then
-            local param_value = GetLayerParamValue(rule.param)
-            if param_value and EvaluateCondition(param_value, rule.op, rule.value) then
-                GoTo("goto" .. GetRegionIndexByName(rule.to), 0)
-                return true
-            end
-        end
-    end
-end
+    reaper.ImGui_Separator(ctx)
 
-
-function GuiMain(proj)
     if reaper.ImGui_Button(ctx, "Open Layers", -FLTMIN) then -- Button to open the script
         local command = reaper.NamedCommandLookup("_RS666e3a9f2e2172c7ac28ad55b6c35440b8f66b1e")
         print(reaper.ReverseNamedCommandLookup(command))
         if command then
-            -- reaper.Main_OnCommand(command, 0) -- Open the script
+           -- reaper.Main_OnCommand(command, 0) -- Open the script
         else
             reaper.ShowMessageBox('Script not found. Please check the script ID.', 'Error', 0)
         end
@@ -91,92 +62,6 @@ function GuiMain(proj)
 
     if change then
         SaveProjectSettings(proj, ProjConfigs[FocusedProj]) -- Save the project settings   
-    end
-
-    ConditionalJumpsUI(ctx)
-end
-
-
-function ConditionalJumpsUI(ctx)
-    reaper.ImGui_Separator(ctx)
-    reaper.ImGui_Text(ctx, 'Conditional Jumps')
-
-    if reaper.ImGui_Button(ctx, '+') then
-        table.insert(ConditionalJumps, { from = '', to = '', param = '', op = '>', value = '0' })
-    end
-    
-
-    local playlist = ProjConfigs[FocusedProj] and ProjConfigs[FocusedProj].playlists and ProjConfigs[FocusedProj].playlists[ProjConfigs[FocusedProj].selected]
-    if not playlist then return end
-
-    local region_names = {}
-    for i, region in ipairs(playlist) do
-        if region.name and region.name ~= '' then
-            table.insert(region_names, region.name)
-        end
-    end
-
-    for i = #ConditionalJumps, 1, -1 do
-        local jump = ConditionalJumps[i]
-        reaper.ImGui_PushID(ctx, i)
-
-        -- Combo FROM
-        if reaper.ImGui_BeginCombo(ctx, 'From##'..i, jump.from ~= '' and jump.from or 'Select region') then
-            for _, name in ipairs(region_names) do
-                if reaper.ImGui_Selectable(ctx, name, jump.from == name) then
-                    jump.from = name
-                    if jump.to == name then
-                        jump.to = ''
-                    end
-                end
-            end
-            reaper.ImGui_EndCombo(ctx)
-        end
-        reaper.ImGui_SameLine(ctx)
-        reaper.ImGui_Text(ctx, '→')
-        reaper.ImGui_SameLine(ctx)
-
-        -- Combo TO
-        if reaper.ImGui_BeginCombo(ctx, 'To##'..i, jump.to ~= '' and jump.to or 'Select region') then
-            for _, name in ipairs(region_names) do
-                if name ~= jump.from then
-                    if reaper.ImGui_Selectable(ctx, name, jump.to == name) then
-                        jump.to = name
-                    end
-                end
-            end
-            reaper.ImGui_EndCombo(ctx)
-        end
-
-        reaper.ImGui_Text(ctx, 'if')
-        reaper.ImGui_SameLine(ctx)
-
-        _, jump.param = reaper.ImGui_InputText(ctx, 'Param##'..i, jump.param or '')
-        reaper.ImGui_SameLine(ctx)
-
-        local operators = { '>', '<', '>=', '<=', '==', '!=' }
-        if reaper.ImGui_BeginCombo(ctx, 'Op##'..i, jump.op or '>') then
-            for _, op in ipairs(operators) do
-                if reaper.ImGui_Selectable(ctx, op, jump.op == op) then
-                    jump.op = op
-                end
-            end
-            reaper.ImGui_EndCombo(ctx)
-        end
-        reaper.ImGui_SameLine(ctx)
-
-        _, jump.value = reaper.ImGui_InputText(ctx, 'Value##'..i, tostring(jump.value or ''))
-        reaper.ImGui_SameLine(ctx)
-
-        -- Delete button
-        if reaper.ImGui_Button(ctx, '🗑##'..i) then
-            table.remove(ConditionalJumps, i)
-            reaper.ImGui_PopID(ctx)
-            goto continue
-        end
-
-        reaper.ImGui_PopID(ctx)
-        ::continue::
     end
 end
 
