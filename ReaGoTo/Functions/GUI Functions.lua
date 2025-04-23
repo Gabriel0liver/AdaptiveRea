@@ -31,7 +31,7 @@ function PlaylistSelector(playlists)
             -- Show regions and markers inside this group
             if open then
                 playlists.current = playlist_key  -- current playlist user is looking at 1 based
-                local change = PlaylistAndConditionalJumpUI(playlist)
+                local change = PlaylistAndConditionalJumpUI(playlist, ctx)
                 is_save = change or is_save
                 reaper.ImGui_EndTabItem(ctx) 
             end

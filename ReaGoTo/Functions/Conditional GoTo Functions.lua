@@ -1,10 +1,8 @@
-
-_G_ConditionalJumps = _G_ConditionalJumps or {}
-local ConditionalJumps = _G_ConditionalJumps
+_G.ConditionalJumps = _G.ConditionalJumps or {}
+ConditionalJumps = _G.ConditionalJumps  -- use shared global table
 
 _G_AdaptiveParams = _G_AdaptiveParams or {}
 local AdaptiveParams = _G_AdaptiveParams
-
 
 -- Update param values, called by AdaptiveHost
 -- Desde AdaptiveHost: SetAdaptiveParamValue(param_name, value)
@@ -37,20 +35,20 @@ function CheckConditionalJumps(current_region)
 end
 
 -- Divided UI: Top half, regions, same as regular GoTo. Bottom half, conditional jumps.
-function PlaylistAndConditionalJumpUI(ctx)
+function PlaylistAndConditionalJumpUI(playlist, ctx)
     local avail_x, avail_y = reaper.ImGui_GetContentRegionAvail(ctx)
     local half_y = avail_y / 2
 
     local is_save = false
 
-    -- Parte superior: regiones
+    -- Top half: Region list
     if reaper.ImGui_BeginChild(ctx, "RegionList", avail_x, half_y, true) then
-        is_save = PlaylistTab(ProjConfigs[FocusedProj].playlists[ProjConfigs[FocusedProj].current]) or is_save
+        is_save = PlaylistTab(playlist) or is_save
         reaper.ImGui_EndChild(ctx)
     end
 
-    -- Parte inferior: condicionales
-    if reaper.ImGui_BeginChild(ctx, "ConditionalJumps", avail_x, -FLT_MIN, true) then
+    -- Bottom half: Conditional jumps
+    if reaper.ImGui_BeginChild(ctx, "ConditionalJumps", avail_x, -FLTMIN, true) then
         ConditionalJumpsUI(ctx)
         reaper.ImGui_EndChild(ctx)
     end
@@ -58,14 +56,20 @@ function PlaylistAndConditionalJumpUI(ctx)
     return is_save
 end
 
-
 -- Conditional Jumps UI
 function ConditionalJumpsUI(ctx)
     reaper.ImGui_Separator(ctx)
     reaper.ImGui_Text(ctx, 'Conditional Jumps')
 
     if reaper.ImGui_Button(ctx, '+') then
-        table.insert(ConditionalJumps, { from = '', to = '', param = '', op = '>', value = '0' })
+        table.insert(ConditionalJumps, {
+            from = '',
+            to = '',
+            param = '',
+            op = '>',
+            value = '0',
+        })
+        reaper.ShowConsoleMsg("Total conditional jumps: " .. tostring(#ConditionalJumps) .. "\n")
     end
 
     local playlist = ProjConfigs[FocusedProj] and ProjConfigs[FocusedProj].playlists and ProjConfigs[FocusedProj].playlists[ProjConfigs[FocusedProj].current]
@@ -80,6 +84,8 @@ function ConditionalJumpsUI(ctx)
 
     for i = #ConditionalJumps, 1, -1 do
         local jump = ConditionalJumps[i]
+        reaper.ShowConsoleMsg("Showing jump " .. i .. "\n")
+
         reaper.ImGui_PushID(ctx, i)
 
         reaper.ImGui_SetNextItemWidth(ctx, 100)
