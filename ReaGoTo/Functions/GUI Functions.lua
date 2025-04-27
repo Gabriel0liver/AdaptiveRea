@@ -8,6 +8,7 @@ function GuiInit()
     FontTiny = reaper.ImGui_CreateFont('sans-serif', 10) 
     reaper.ImGui_Attach(ctx, FontTiny)
     LoadTransitions()
+    LoadConditionalJumps()
 end
 
 function PlaylistSelector(playlists)

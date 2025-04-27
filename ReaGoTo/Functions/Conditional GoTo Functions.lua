@@ -6,7 +6,24 @@ local AdaptiveParams = _G_AdaptiveParams
 -- Update param values, called by AdaptiveHost
 function SetAdaptiveParamValue(param_name, value)
     AdaptiveParams[param_name] = tonumber(value)
+
+    if current_region then
+        CheckConditionalJumps(current_region)
+    end
 end
+
+function SaveConditionalJumps()
+    table.save(_G.ConditionalJumps, reaper.GetResourcePath() .. "/ReaGoTo_ConditionalJumpsData.lua")
+end
+
+function LoadConditionalJumps()
+    local path = reaper.GetResourcePath() .. "/ReaGoTo_ConditionalJumpsData.lua"
+    local loaded_jumps = table.load(path)
+    if loaded_jumps then
+        _G.ConditionalJumps = loaded_jumps
+    end
+end
+
 
 -- Checks, such as 'a > 0.5'
 function EvaluateCondition(param_value, op, value)
@@ -56,8 +73,8 @@ end
 
 -- Conditional Jumps UI
 function ConditionalJumpsUI(ctx, playlist)
-    reaper.ImGui_Separator(ctx)
     reaper.ImGui_Text(ctx, 'Conditional Jumps')
+    reaper.ImGui_Separator(ctx)
 
     if reaper.ImGui_Button(ctx, '+') then
         _G.ConditionalJumps[#_G.ConditionalJumps + 1] = {
@@ -67,6 +84,7 @@ function ConditionalJumpsUI(ctx, playlist)
             op = '>',
             value = '0',
         }
+        SaveConditionalJumps()
     end
 
     if not playlist then return end
@@ -99,13 +117,15 @@ function ConditionalJumpsUI(ctx, playlist)
          if reaper.ImGui_BeginCombo(ctx, '##From'..i, jump.from ~= '' and jump.from or 'Any', reaper.ImGui_ComboFlags_NoArrowButton()) then
              if reaper.ImGui_Selectable(ctx, 'Any', jump.from == 'Any') then
                  jump.from = 'Any'
+                SaveConditionalJumps()
              end
              for _, name in ipairs(from_names) do
                  if reaper.ImGui_Selectable(ctx, name, jump.from == name) then
-                     jump.from = name
-                     if jump.to == name then
-                         jump.to = ''
-                     end
+                    jump.from = name
+                    if jump.to == name then
+                        jump.to = ''
+                    end
+                    SaveConditionalJumps()
                  end
              end
              reaper.ImGui_EndCombo(ctx)
@@ -122,6 +142,7 @@ function ConditionalJumpsUI(ctx, playlist)
                  if name ~= jump.from then
                      if reaper.ImGui_Selectable(ctx, name, jump.to == name) then
                          jump.to = name
+                         SaveConditionalJumps()
                      end
                  end
              end
@@ -134,7 +155,11 @@ function ConditionalJumpsUI(ctx, playlist)
 
         -- PARAM name input
         reaper.ImGui_SetNextItemWidth(ctx, 20)
-        _, jump.param = reaper.ImGui_InputText(ctx, '##Param'..i, jump.param or '')
+        local changed_param, new_param = reaper.ImGui_InputText(ctx, '##Param'..i, jump.param or '')
+        if changed_param then
+            jump.param = new_param
+            SaveConditionalJumps()
+        end
         reaper.ImGui_SameLine(ctx)
 
         -- OPERATOR combo (no arrow button)
@@ -144,6 +169,7 @@ function ConditionalJumpsUI(ctx, playlist)
             for _, op in ipairs(operators) do
                 if reaper.ImGui_Selectable(ctx, op, jump.op == op) then
                     jump.op = op
+                    SaveConditionalJumps()
                 end
             end
             reaper.ImGui_EndCombo(ctx)
@@ -153,22 +179,18 @@ function ConditionalJumpsUI(ctx, playlist)
 
         -- VALUE input
         reaper.ImGui_SetNextItemWidth(ctx, 20)
-        _, jump.value = reaper.ImGui_InputText(ctx, '##Value'..i, tostring(jump.value or ''))
-        reaper.ImGui_SameLine(ctx)
-
-        -- Transition and Delete buttons
-        if reaper.ImGui_Button(ctx, 'Transition##'..i) then
-            if jump.from and jump.from ~= "Any" then
-                current_region = jump.from
-                selected_target_region = jump.to
-                reaper.ImGui_OpenPopup(ctx, '##renameinput')
-            end
+        local changed_value, new_value = reaper.ImGui_InputText(ctx, '##Value'..i, tostring(jump.value or ''))
+        if changed_value then
+            jump.value = new_value
+            SaveConditionalJumps()
         end
+        reaper.ImGui_SameLine(ctx)
 
         reaper.ImGui_SameLine(ctx)
         if reaper.ImGui_Button(ctx, 'X##'..i) then
             table.remove(_G.ConditionalJumps, i)
             reaper.ImGui_PopID(ctx)
+            SaveConditionalJumps()
             goto continue
         end
 
