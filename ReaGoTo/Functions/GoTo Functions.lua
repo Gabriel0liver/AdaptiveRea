@@ -17,8 +17,10 @@ function GoTo(reason,proj)
     played_transitions = {}
 
     local proj_table = ProjConfigs[proj] 
+
     local playlists = proj_table.playlists
     local playlist = playlists[playlists.current]
+    
         
     -- if is a table decide one of them
     if reason:match('{.+}') then -- Todo idea reason with random pick position : {next, next, prev}. User actually just types:  next, next, prev ; then add in the code the {} and fix the syntax 

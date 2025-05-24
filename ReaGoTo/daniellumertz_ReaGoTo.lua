@@ -57,6 +57,7 @@ FLTMIN, FLTMAX = reaper.ImGui_NumericLimits_Float() --set the padding to the rig
 transitions = transitions or {}
 current_region = GetCurrentRegionName(0)
 target_regions = GetAllRegionNamesExceptCurrent(0, current_region)
+cursor_region = GetCurrentRegionName(0)
 
 
 -- Start

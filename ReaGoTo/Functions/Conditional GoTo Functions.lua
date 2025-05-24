@@ -1,16 +1,21 @@
 _G.ConditionalJumps = _G.ConditionalJumps or {}
+_G.PendingAdaptiveParams = _G.PendingAdaptiveParams or {}
 
 _G_AdaptiveParams = _G_AdaptiveParams or {}
 local AdaptiveParams = _G_AdaptiveParams
 
 -- Update param values, called by AdaptiveHost
 function SetAdaptiveParamValue(param_name, value)
+
     AdaptiveParams[param_name] = tonumber(value)
 
-    if current_region then
-        CheckConditionalJumps(current_region)
+    local cursor_region = GetRegionAtCursor()
+
+    if cursor_region then
+        CheckConditionalJumps(cursor_region)
     end
 end
+
 
 function SaveConditionalJumps()
     table.save(_G.ConditionalJumps, reaper.GetResourcePath() .. "/ReaGoTo_ConditionalJumpsData.lua")
@@ -22,6 +27,20 @@ function LoadConditionalJumps()
     if loaded_jumps then
         _G.ConditionalJumps = loaded_jumps
     end
+end
+
+function GetRegionAtCursor()
+    local cursor_pos = reaper.GetCursorPosition()
+    local retval, isrgn, start, end_pos, name = nil
+
+    for i = 0, reaper.CountProjectMarkers(0) - 1 do
+        retval, isrgn, start, end_pos, name = reaper.EnumProjectMarkers(i)
+        if isrgn and cursor_pos >= start and cursor_pos < end_pos then
+            return name
+        end
+    end
+
+    return nil
 end
 
 
@@ -37,17 +56,30 @@ function EvaluateCondition(param_value, op, value)
 end
 
 -- Check, perform jumps
-function CheckConditionalJumps(current_region)
-    for _, rule in ipairs(_G.ConditionalJumps or {}) do
-        if rule.from == current_region then
+function CheckConditionalJumps(cursor_region)
+    
+    for i, rule in ipairs(ConditionalJumps) do
+        if rule.to ~= cursor_region and rule.from == "" or rule.from == cursor_region then
             local param_value = AdaptiveParams[rule.param]
-            if param_value and EvaluateCondition(param_value, rule.op, tonumber(rule.value)) then
-                GoTo("goto" .. GetRegionIndexByName(rule.to), 0)
-                return true
+            if param_value then
+                if EvaluateCondition(param_value, rule.op, tonumber(rule.value)) then
+                    local index = GetRegionIndexByName(tostring(rule.to))
+                    if index == nil then
+                        reaper.ShowConsoleMsg("Couldn't find region named " .. tostring(rule.to) .. "\n")
+                    else
+                        GoTo("goto" .. index, FocusedProj)
+                        cursor_region = rule.to
+                    end
+                    return true
+                end
+            else
+                reaper.ShowConsoleMsg("Couldn't find value of param '" .. tostring(rule.param) .. "'\n")
             end
         end
     end
+    
 end
+
 
 -- Divided UI: Top half, regions, same as regular GoTo. Bottom half, conditional jumps.
 function PlaylistAndConditionalJumpUI(playlist, ctx)
@@ -197,4 +229,40 @@ function ConditionalJumpsUI(ctx, playlist)
         reaper.ImGui_PopID(ctx)
         ::continue::
     end
+end
+
+function ReadMem()
+    reaper.gmem_attach("ReaGoTo") -- Attach to the gmem
+    if reaper.gmem_read(0) == 1 then
+        local parameters = ProjConfigs[FocusedProj].parameters
+        
+        local length = reaper.gmem_read(2)  -- Read parameter string length
+        local str = ""
+        for i = 1, length do
+            str = str .. string.char(reaper.gmem_read(2 + i)) --Read parameter string
+        end
+
+        local value = reaper.gmem_read(1)
+        -- Update parameter values to trigger jumps
+        SetAdaptiveParamValue(str, value)
+
+        reaper.gmem_write(0, 0) -- Reset the memory
+    end
+
+    -- If ProjConfigs is ready, read through pending messages
+    if ProjConfigs and FocusedProj and ProjConfigs[FocusedProj] and #_G.PendingAdaptiveParams > 0 then
+        ProcessPendingAdaptiveParams()
+    end
+    
+
+end
+
+function ProcessPendingAdaptiveParams()
+    for i, msg in ipairs(_G.PendingAdaptiveParams) do
+        AdaptiveParams[msg.param] = tonumber(msg.value)
+        if cursor_region then
+            CheckConditionalJumps(cursor_region)
+        end
+    end
+    _G.PendingAdaptiveParams = {} -- Clean
 end

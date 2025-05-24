@@ -82,6 +82,17 @@ function GetRegionNameFromIndex(region_index)
     return nil
 end
 
+function GetRegionIndexByName(region_name)
+    for i = 0, reaper.CountProjectMarkers(0) - 1 do
+        local _, isrgn, _, _, regionName, index = reaper.EnumProjectMarkers(i)
+        if isrgn and regionName == region_name then
+            return index
+        end
+    end
+    return nil
+end
+
+
 function GetRegionStartTime(region_name)
     local num_markers, num_regions = reaper.CountProjectMarkers(FocusedProj)
     for i = 0, num_markers + num_regions - 1 do
@@ -127,6 +138,8 @@ last_region = nil
 
 --- Check for each project if need to trigger goto
 function GoToCheck()
+    ReadMem()
+
     local proj_t = (UserConfigs.only_focus_project and {ProjConfigs[FocusedProj]}) or ProjConfigs -- if only_focus_project will be a table with the focused project only else will do for all open projectes
     for proj, project_table in pairs(proj_t) do
         -- Get play pos/state
