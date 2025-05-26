@@ -32,17 +32,16 @@ function GuiMain(proj)
     reaper.ImGui_Separator(ctx)
 
     if reaper.ImGui_Button(ctx, "Open Layers", -FLTMIN) then -- Button to open the script
-        local command = reaper.NamedCommandLookup("_RS666e3a9f2e2172c7ac28ad55b6c35440b8f66b1e")
-        print(reaper.ReverseNamedCommandLookup(command))
+        local command = reaper.NamedCommandLookup("_RScb2963420e188ce6e4cb5d9254e72061f9836b97")
         if command then
-           -- reaper.Main_OnCommand(command, 0) -- Open the script
+            reaper.Main_OnCommand(command, 0) -- Open the script
         else
             reaper.ShowMessageBox('Script not found. Please check the script ID.', 'Error', 0)
         end
     
     end
     if reaper.ImGui_Button(ctx, "Open GoTo", -FLTMIN) then -- Button to open the script
-        local command = reaper.NamedCommandLookup("")
+        local command = reaper.NamedCommandLookup("_RSb8ab157fb7d280e1fd656117c204a7f95dbb9782")
         if command then
             reaper.Main_OnCommand(command, 0) -- Open the script
         else
@@ -51,7 +50,7 @@ function GuiMain(proj)
     
     end
     if reaper.ImGui_Button(ctx, "Open Scatterer", -FLTMIN) then -- Button to open the script
-        local command = reaper.NamedCommandLookup("")
+        local command = reaper.NamedCommandLookup("_RS2f2972589c8bf165a04d314777c833aa38d67b7f")
         if command then
             reaper.Main_OnCommand(command, 0) -- Open the script
         else

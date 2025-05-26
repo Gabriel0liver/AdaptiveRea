@@ -1,6 +1,6 @@
 function AddTracksToSampler(proj, remove)
     if proj.sampler_track == nil or not reaper.ValidatePtr(proj.sampler_track, "MediaTrack*") then --Create sampler track folder if it does not exist
-        AddSamplerTrack(proj.sampler_track) --Create sampler track folder if it does not exist
+        AddSamplerTrack(proj) --Create sampler track folder if it does not exist
     end
 
     local items_to_remove = {}
@@ -57,13 +57,14 @@ function AddTracksToSampler(proj, remove)
     reaper.UpdateArrange() --Update arrange view
 end
 
-function AddSamplerTrack(sampler_track)
+function AddSamplerTrack(proj)
     local idx = reaper.CountTracks(0)
     reaper.InsertTrackAtIndex(idx, true) --InsertTrackAtIndex
     sampler_track = reaper.GetTrack(0, idx) --GetTrack
-
+    
     reaper.GetSetMediaTrackInfo_String(sampler_track, "P_NAME", "Sampler Track", true) --Change name
     reaper.SetMediaTrackInfo_Value(sampler_track, "I_FOLDERDEPTH", 1) -- Set as a folder track
     reaper.SetMediaTrackInfo_Value(sampler_track, "I_FOLDERCOMPACT", 2) -- Set folder as collapsed
+    proj.sampler_track = sampler_track --Set sampler track to project
     reaper.UpdateArrange() --Update arrange view
 end
