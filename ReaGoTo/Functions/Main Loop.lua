@@ -201,7 +201,7 @@ function GoToCheck()
             -- (Transitions: Data Verification and Note insertion)
             ------------------------------------------
 
-            if project_table.is_triggered then
+            if project_table.is_triggered or proj_table.is_force_goto then
 
                 local goto_region_index = tonumber(project_table.is_triggered:match("goto(%d+)"))
                 local goto_region_name = GetRegionNameFromIndex(goto_region_index)
