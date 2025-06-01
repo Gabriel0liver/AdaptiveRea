@@ -67,7 +67,11 @@ function CheckConditionalJumps(cursor_region)
                     if index == nil then
                         reaper.ShowConsoleMsg("Couldn't find region named " .. tostring(rule.to) .. "\n")
                     else
-                        GoTo("goto" .. index, FocusedProj)
+                        SetGoTo(FocusedProj, 'goto'.. index)
+                        if reaper.ImGui_GetKeyMods(ctx) == reaper.ImGui_Mod_Alt() then
+                            GoTo(ProjConfigs[FocusedProj].is_triggered,FocusedProj)
+                        end
+                        -- GoTo("goto" .. index, FocusedProj)
                         cursor_region = rule.to
                     end
                     return true
