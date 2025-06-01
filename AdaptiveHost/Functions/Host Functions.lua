@@ -1,7 +1,7 @@
 function RecieveOSC()
     local message = osc.Receive(udp) --receive the osc messahe
 
-    local scripts = {"layersv2", "gotov2" ,"scatter"}
+    local scripts = {"layersv2", "gotov2" ,"scatterer"}
 
     for k, v in ipairs(message) do
         if v.address == 'play' then

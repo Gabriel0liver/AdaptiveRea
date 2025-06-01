@@ -37,7 +37,7 @@ function Scatter(proj)
 end
 
 function ReadMem()
-    reaper.gmem_attach("Scatterer") -- Attach to the gmem
+    reaper.gmem_attach("scatterer") -- Attach to the gmem
     if reaper.gmem_read(0) == 1 then
         local groups = ProjConfigs[FocusedProj].groups
 
