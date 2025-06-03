@@ -13,6 +13,14 @@
   <a href="#license">License</a>
 </p>
 
+## Video demo
+
+
+
+https://github.com/user-attachments/assets/1ff2dbd0-810c-4d32-85b2-80835ceba29d
+
+
+
 ## Key Features
 
 * Horizontal composition with transition clips
